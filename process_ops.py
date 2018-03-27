@@ -5,7 +5,13 @@ import logging
 
 from project.database import connect_db
 from gambit.trustwallet import find_op
-from gambit.bot import load_token, init_bot
+from gambit_bot import GambitBot
+
+
+MSG_TEMPLATE = (
+    'Found token transfer to %(to)s from %(from)s, value=%(value)s'
+    ', tx-id=%(tx_id)s'
+)
 
 
 def load_recent_processed_block_id(db):
@@ -34,26 +40,35 @@ def setup_logging():
 def main():
     setup_logging()
     db = connect_db()
-    recp_address = '0xe47494379c1d48ee73454c251a6395fdd4f9eb43' # some recepient
-    token_address = '0x12459c951127e0c374ff9105dda097662a027093' # some contract
-    channel_id = -1001263856479 # gambit-test 
+
+    bot = GambitBot()
+    bot.parse_cli_opts()
+    tg_bot = bot.init_bot()
+    bot.check_settings()
+
     block_id = 1 + load_recent_processed_block_id(db)
-    bot = init_bot(load_token())
-    for tx, op in find_op(recp_address, token_address, start_block=block_id):
+    recp_address = bot.get_settings('wallet')
+    token_address = bot.get_settings('token')
+    channel_id = bot.get_setting('channel')
+
+    for tx, op in find_op(recp_address, token_adddress, start_block=block_id):
         op_item = prepare_op_item(tx, op)
         old_item = db.op.find_one({'_id': op_item['_id']})
         if old_item:
             logging.debug('Found duplicate for operation %s' % op_item['_id'])
         if not old_item or not old_item['_notified']:
             db.op.save(op_item)
-            msg = 'Found token transfer to %s from %s, value=%s, tx-id=%s' % (
-                op['to'], op['from'], op['value'], op['transactionId']
-            );
+            msg = MSG_TPL % {
+                'to': op['to'],
+                'from': op['from'],
+                'value': op['value'],
+                'tx_id': op['transactionId'],
+            }
             logging.debug(msg)
-            logging.debug('Notyfing channel #%d about msg #%s' % (
+            logging.debug('Notyfing channel #%d about operation #%s' % (
                 channel_id, op_item['_id'],
             ))
-            bot.send_message(channel_id, msg)
+            tg_bot.send_message(channel_id, msg)
             db.op.find_one_and_update(
                 {'_id': op_item['_id']},
                 {'$set': {'notified': True}},
