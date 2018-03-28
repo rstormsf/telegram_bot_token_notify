@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+import re
 from copy import deepcopy
 from pprint import pprint
 import logging
 from argparse import ArgumentParser
 import time
+
+from telegram import ParseMode
 
 from project.database import connect_db
 from gambit.trustwallet import find_op
@@ -11,8 +14,7 @@ from gambit_bot import GambitBot
 
 
 MSG_TEMPLATE = (
-    'Found token transfer to %(to)s from %(from)s, value=%(value)s'
-    ', tx-id=%(tx_id)s'
+    'New [token transfer](https://etherscan.io/tx/%(tx_id)s) to %(to)s from %(from)s, value=%(value)s'
 )
 
 
@@ -53,6 +55,14 @@ def process_cli():
     }
 
 
+def format_float(val, decimals):
+    val = round(val, decimals)
+    if '.' in str(val):
+        return str(val).rstrip('0').rstrip('.')
+    else:
+        return str(val)
+
+
 def main():
     setup_logging()
     opts = process_cli()
@@ -75,17 +85,25 @@ def main():
                 logging.debug('Found duplicate for operation %s' % op_item['_id'])
             if not old_item or not old_item['_notified']:
                 db.op.save(op_item)
+                tx_id = re.sub(r'-0$', '', op['transactionId'])
+                decimals = op['contract']['decimals']
+                value_norm = format_float(int(op['value']) / (10**decimals), 2)
                 msg = MSG_TEMPLATE % {
                     'to': op['to'],
                     'from': op['from'],
-                    'value': op['value'],
-                    'tx_id': op['transactionId'],
+                    'value': value_norm,
+                    'tx_id': tx_id,
                 }
                 logging.debug(msg)
                 logging.debug('Notyfing channel #%s about operation #%s' % (
                     channel_id, op_item['_id'],
                 ))
-                tg_bot.send_message(channel_id, msg)
+                tg_bot.send_message(
+                    channel_id,
+                    msg,
+                    parse_mode=ParseMode.MARKDOWN,
+                    disable_web_page_preview=True
+                )
                 time.sleep(0.5)
                 db.op.find_one_and_update(
                     {'_id': op_item['_id']},

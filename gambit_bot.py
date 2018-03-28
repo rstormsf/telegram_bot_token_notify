@@ -147,7 +147,7 @@ class GambitBot(object):
         if not self.is_user_admin(msg.from_user.id):
             bot.send_message(msg.chat.id, 'Access denied')
             return
-        ret = 'Chat ID: -100%d' % msg.chat.id
+        ret = 'Chat ID: %d' % msg.chat.id
         bot.send_message(msg.chat.id, ret)
 
     def register_handlers(self, dispatcher):
