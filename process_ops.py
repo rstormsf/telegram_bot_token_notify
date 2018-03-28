@@ -47,11 +47,11 @@ def main():
     bot.check_settings()
 
     block_id = 1 + load_recent_processed_block_id(db)
-    recp_address = bot.get_settings('wallet')
-    token_address = bot.get_settings('token')
+    recp_address = bot.get_setting('wallet')
+    token_address = bot.get_setting('token')
     channel_id = bot.get_setting('channel')
 
-    for tx, op in find_op(recp_address, token_adddress, start_block=block_id):
+    for tx, op in find_op(recp_address, token_address, start_block=block_id):
         op_item = prepare_op_item(tx, op)
         old_item = db.op.find_one({'_id': op_item['_id']})
         if old_item:
