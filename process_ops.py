@@ -2,6 +2,8 @@
 from copy import deepcopy
 from pprint import pprint
 import logging
+from argparse import ArgumentParser
+import time
 
 from project.database import connect_db
 from gambit.trustwallet import find_op
@@ -37,12 +39,26 @@ def setup_logging():
     logging.basicConfig(level=logging.DEBUG)
 
 
+def process_cli():
+    parser = ArgumentParser()
+    parser.add_argument('--mode', default='production')
+    parser.add_argument(
+        '-r', '--repeat', action='store_true', default=False,
+        help='Activates every 1 minute, run untill process killed'
+    )
+    opts = parser.parse_args()
+    return {
+        'mode': opts.mode,
+        'repeat': opts.repeat,
+    }
+
+
 def main():
     setup_logging()
+    opts = process_cli()
     db = connect_db()
 
-    bot = GambitBot()
-    bot.parse_cli_opts()
+    bot = GambitBot(opts=opts)
     tg_bot = bot.init_bot()
     bot.check_settings()
 
@@ -51,28 +67,33 @@ def main():
     token_address = bot.get_setting('token')
     channel_id = bot.get_setting('channel')
 
-    for tx, op in find_op(recp_address, token_address, start_block=block_id):
-        op_item = prepare_op_item(tx, op)
-        old_item = db.op.find_one({'_id': op_item['_id']})
-        if old_item:
-            logging.debug('Found duplicate for operation %s' % op_item['_id'])
-        if not old_item or not old_item['_notified']:
-            db.op.save(op_item)
-            msg = MSG_TPL % {
-                'to': op['to'],
-                'from': op['from'],
-                'value': op['value'],
-                'tx_id': op['transactionId'],
-            }
-            logging.debug(msg)
-            logging.debug('Notyfing channel #%d about operation #%s' % (
-                channel_id, op_item['_id'],
-            ))
-            tg_bot.send_message(channel_id, msg)
-            db.op.find_one_and_update(
-                {'_id': op_item['_id']},
-                {'$set': {'notified': True}},
-            )
+    while True:
+        for tx, op in find_op(recp_address, token_address, start_block=block_id):
+            op_item = prepare_op_item(tx, op)
+            old_item = db.op.find_one({'_id': op_item['_id']})
+            if old_item:
+                logging.debug('Found duplicate for operation %s' % op_item['_id'])
+            if not old_item or not old_item['_notified']:
+                db.op.save(op_item)
+                msg = MSG_TPL % {
+                    'to': op['to'],
+                    'from': op['from'],
+                    'value': op['value'],
+                    'tx_id': op['transactionId'],
+                }
+                logging.debug(msg)
+                logging.debug('Notyfing channel #%d about operation #%s' % (
+                    channel_id, op_item['_id'],
+                ))
+                tg_bot.send_message(channel_id, msg)
+                db.op.find_one_and_update(
+                    {'_id': op_item['_id']},
+                    {'$set': {'notified': True}},
+                )
+        if opts['repeat']:
+            time.sleep(60)
+        else:
+            break
 
 
 if __name__ == '__main__':

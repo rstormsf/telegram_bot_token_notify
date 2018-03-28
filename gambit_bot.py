@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import json
 import logging
 import os
+from copy import deepcopy
 
 from project.database import connect_db
 
@@ -23,11 +24,14 @@ class InvalidCommand(Exception):
 
 
 class GambitBot(object):
-    def __init__(self):
+    def __init__(self, opts=None):
         self.opts = {
             'mode': None,
         }
         self.db = connect_db()
+        if opts:
+            self.opts = deepcopy(opts)
+            self.check_opts_integrity()
 
     def parse_cli_opts(self):
         parser = ArgumentParser()

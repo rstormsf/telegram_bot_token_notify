@@ -16,6 +16,8 @@ init:
 
 stop:
 	heroku ps:scale bot=0
+	heroku ps:scale checker=0
 
 start:
 	heroku ps:scale bot=1
+	heroku ps:scale checker=1
