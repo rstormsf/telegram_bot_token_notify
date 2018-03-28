@@ -3,7 +3,7 @@
 - Install heroku package on local computer
 - Go to project directory
 - `heroku create`
-- `heroku push heroku master`
+- `git push heroku master`
 - `heroku ps:scale bot=1`
 - `heroku ps:scale checker=1`
 - `heroku config:set TG_API_TOKEN_PRODUCTION=SECRET-TELEGRAM-API-KEY`
