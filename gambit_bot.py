@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 import json
 import logging
+import os
 
 from project.database import connect_db
 
@@ -13,7 +14,7 @@ HELP = """
 # Commands:
 
 `/set <wallet|token|channel> <value>` - set config
-`/show_config` - show config
+`/config` - show config
 """
 
 
@@ -22,8 +23,7 @@ class InvalidCommand(Exception):
 
 
 class GambitBot(object):
-    def __init__(self, config_file='var/config.json'):
-        self.config = self.load_private_config(config_file)
+    def __init__(self):
         self.opts = {
             'mode': None,
         }
@@ -39,7 +39,7 @@ class GambitBot(object):
         self.check_opts_integrity()
 
     def get_token(self):
-        return self.config['api_token_%s' % self.opts['mode']]
+        return os.environ[('tg_api_token_%s' % self.opts['mode']).upper()]
 
     def run_polling(self):
         updater = self.init_updater(self.get_token())
@@ -59,10 +59,6 @@ class GambitBot(object):
         if token is None:
             token = self.get_token()
         return Updater(token=token, workers=16)
-
-    def load_private_config(self, config_path):
-        with open(config_path) as inp:
-            return json.load(inp)
 
     def handle_start_help(self, bot, update):
         msg = update.effective_message
@@ -106,7 +102,7 @@ class GambitBot(object):
                 'Setting `%s` has been set to `%s' % (setting, value)
             )
 
-    def handle_show_config(self, bot, update):
+    def handle_config(self, bot, update):
         msg = update.effective_message
         wallet = self.get_setting('wallet') 
         token = self.get_setting('token') 
@@ -127,7 +123,7 @@ class GambitBot(object):
             ['start', 'help'], self.handle_start_help)
         )
         dispatcher.add_handler(CommandHandler('set', self.handle_set))
-        dispatcher.add_handler(CommandHandler('show_config', self.handle_show_config))
+        dispatcher.add_handler(CommandHandler('config', self.handle_config))
 
     def check_settings(self):
         wallet = self.get_setting('wallet') 
