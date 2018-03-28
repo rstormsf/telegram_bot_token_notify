@@ -14,7 +14,7 @@ from gambit_bot import GambitBot
 
 
 MSG_TEMPLATE = (
-    'New [token transfer](https://etherscan.io/tx/%(tx_id)s) to %(to)s from %(from)s, value=%(value)s'
+    'New [token transfer](https://etherscan.io/tx/%(tx_id)s) to %(to)s from %(from)s, value=%(value)s %(symbol)s'
 )
 
 
@@ -86,13 +86,21 @@ def main():
             if not old_item or not old_item['_notified']:
                 db.op.save(op_item)
                 tx_id = re.sub(r'-0$', '', op['transactionId'])
-                decimals = op['contract']['decimals']
+                try:
+                    decimals = op['contract']['decimals']
+                except KeyError:
+                    decimals = 18
+                try:
+                    symbol = op['contract']['symbol']
+                except KeyError:
+                    symbol = ''
                 value_norm = format_float(int(op['value']) / (10**decimals), 2)
                 msg = MSG_TEMPLATE % {
                     'to': op['to'],
                     'from': op['from'],
                     'value': value_norm,
                     'tx_id': tx_id,
+                    'symbol': symbol,
                 }
                 logging.debug(msg)
                 logging.debug('Notyfing channel #%s about operation #%s' % (
