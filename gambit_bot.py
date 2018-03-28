@@ -16,6 +16,7 @@ HELP = """
 
 `/set <wallet|token|channel> <value>` - set config
 `/config` - show config
+`/chatid - show chat ID`
 """
 
 
@@ -45,9 +46,14 @@ class GambitBot(object):
     def get_token(self):
         return os.environ[('tg_api_token_%s' % self.opts['mode']).upper()]
 
+    def hook_before_polling(self, updater):
+        bot = updater.bot
+        logging.debug('Bot info: %s' % bot.get_me())
+
     def run_polling(self):
         updater = self.init_updater(self.get_token())
         self.register_handlers(updater.dispatcher)
+        self.hook_before_polling(updater)
         updater.bot.delete_webhook()
         updater.start_polling()
 
@@ -123,12 +129,21 @@ class GambitBot(object):
         ) % self.get_settings()
         bot.send_message(msg.chat.id, ret)
 
+    def handle_chatid(self, bot, update):
+        msg = update.effective_message
+        if not self.is_user_admin(msg.from_user.id):
+            bot.send_message(msg.chat.id, 'Access denied')
+            return
+        ret = 'Chat ID: -100%d' % msg.chat.id
+        bot.send_message(msg.chat.id, ret)
+
     def register_handlers(self, dispatcher):
         dispatcher.add_handler(CommandHandler(
             ['start', 'help'], self.handle_start_help)
         )
         dispatcher.add_handler(CommandHandler('set', self.handle_set))
         dispatcher.add_handler(CommandHandler('config', self.handle_config))
+        dispatcher.add_handler(CommandHandler('chatid', self.handle_chatid))
 
     def check_settings(self):
         wallet = self.get_setting('wallet') 
