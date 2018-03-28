@@ -97,9 +97,9 @@ class GambitBot(object):
         return uid == int(os.environ['TG_ADMIN_ID'])
 
     def handle_set(self, bot, update):
+        msg = update.effective_message
         if msg.chat.type != 'private':
             return
-        msg = update.effective_message
         if not self.is_user_admin(msg.from_user.id):
             bot.send_message(msg.chat.id, 'Access denied')
             return
