@@ -1,3 +1,5 @@
+import logging
+
 from project.database import connect_db
 from process_ops import setup_logging
 from gambit_bot import GambitBot
@@ -13,3 +15,9 @@ def main():
     bot.set_setting('wallet', wallet_address)
     bot.set_setting('token', token_address)
     bot.set_setting('channel', channel_id)
+    logging.debug('Config has set. Config is:')
+    logging.debug(bot.get_settings())
+
+
+if __name__ == '__main__':
+    main()

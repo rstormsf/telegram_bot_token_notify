@@ -102,20 +102,21 @@ class GambitBot(object):
                 'Setting `%s` has been set to `%s' % (setting, value)
             )
 
+    def get_settings(self):
+        return {
+            'wallet': self.get_setting('wallet'),
+            'token': self.get_setting('token'),
+            'channel': self.get_setting('channel'),
+        }
+
     def handle_config(self, bot, update):
         msg = update.effective_message
-        wallet = self.get_setting('wallet') 
-        token = self.get_setting('token') 
-        channel = self.get_setting('channel') 
-        ret = '''# Config:
-        * `wallet:` %s
-        * `token:` %s
-        * `channel:` %s
-        ''' % (
-            wallet,
-            token,
-            channel,
-        )
+        ret = (
+            '# Config:\n'
+            '* `wallet:` %(wallet)s\n'
+            '* `token:` %(token)s\n'
+            '* `channel:` %(channel)s'
+        ) % self.get_settings()
         bot.send_message(msg.chat.id, ret)
 
     def register_handlers(self, dispatcher):
