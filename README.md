@@ -7,6 +7,8 @@
 - `heroku ps:scale bot=1`
 - `heroku ps:scale checker=1`
 - `heroku config:set TG_API_TOKEN_PRODUCTION=SECRET-TELEGRAM-API-KEY`
+- `heroku config:set TRUSTWALLET_API_URL="https://api.trustwalletapp.com/transactions?address=%(wallet)s&page=%(page)d&startBlock=%(start_block)d"
+- `heroku config:set TG_ADMIN_ID=<TG-USER_ID>`
 - `heroku addons:create mongolab` # will create sandbox plan
 - Use bot UI to set up wallet, token and channel
 

@@ -1,16 +1,19 @@
 from pprint import pprint
 import json
 from urllib.parse import quote
-from urllib3 import PoolManager
+import os
+
 import certifi
+from urllib3 import PoolManager
 
 
 def build_txlist_url(address, page, start_block):
-    return 'https://api.trustwalletapp.com/transactions?address=%s&page=%s&startBlock=%s' % (
-        quote(address),
-        str(int(page)),
-        str(int(start_block)),
-    )
+    api_url = os.getenv('TRUSTWALLET_API_URL')
+    return api_url % {
+        'wallet': quote(address),
+        'page': int(page),
+        'start_block': int(start_block),
+    }
 
 
 def find_op(recp_address, token_address, start_block=0):

@@ -93,8 +93,16 @@ class GambitBot(object):
         except TypeError:
             return None
 
+    def is_user_admin(self, uid):
+        return uid == int(os.environ['TG_ADMIN_ID'])
+
     def handle_set(self, bot, update):
+        if msg.chat.type != 'private':
+            return
         msg = update.effective_message
+        if not self.is_user_admin(msg.from_user.id):
+            bot.send_message(msg.chat.id, 'Access denied')
+            return
         try:
             items = msg.text.strip().split(' ')
             if not len(items) == 3:
@@ -121,6 +129,11 @@ class GambitBot(object):
 
     def handle_config(self, bot, update):
         msg = update.effective_message
+        if msg.chat.type != 'private':
+            return
+        if not self.is_user_admin(msg.from_user.id):
+            bot.send_message(msg.chat.id, 'Access denied')
+            return
         ret = (
             '# Config:\n'
             '* `wallet:` %(wallet)s\n'
