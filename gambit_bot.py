@@ -12,11 +12,11 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Regex
 
 
 HELP = """
-# Commands:
+*Commands:*
 
-`/set <wallet|token|channel> <value>` - set config
-`/config` - show config
-`/chatid - show chat ID`
+- `/set <wallet|token|channel> <value>` - set config
+- `/config` - show config
+- `/chatid` - show chat ID
 """
 
 
@@ -135,12 +135,12 @@ class GambitBot(object):
             bot.send_message(msg.chat.id, 'Access denied')
             return
         ret = (
-            '# Config:\n'
-            '* `wallet:` %(wallet)s\n'
-            '* `token:` %(token)s\n'
-            '* `channel:` %(channel)s'
+            '*Config:*\n'
+            '- `wallet:` %(wallet)s\n'
+            '- `token:` %(token)s\n'
+            '- `channel:` %(channel)s'
         ) % self.get_settings()
-        bot.send_message(msg.chat.id, ret)
+        bot.send_message(msg.chat.id, ret, parse_mode=ParseMode.MARKDOWN)
 
     def handle_chatid(self, bot, update):
         msg = update.effective_message

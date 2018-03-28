@@ -33,4 +33,6 @@ def find_op(recp_address, token_address, start_block=0):
                 for op in tx['operations']:
                     if op['to'] == recp_address:
                         yield tx, op
-        break
+        page += 1
+        if data['page'] == data['pages']:
+            break

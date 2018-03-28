@@ -75,7 +75,7 @@ def main():
                 logging.debug('Found duplicate for operation %s' % op_item['_id'])
             if not old_item or not old_item['_notified']:
                 db.op.save(op_item)
-                msg = MSG_TPL % {
+                msg = MSG_TEMPLATE % {
                     'to': op['to'],
                     'from': op['from'],
                     'value': op['value'],
@@ -86,6 +86,7 @@ def main():
                     channel_id, op_item['_id'],
                 ))
                 tg_bot.send_message(channel_id, msg)
+                time.sleep(0.5)
                 db.op.find_one_and_update(
                     {'_id': op_item['_id']},
                     {'$set': {'notified': True}},
