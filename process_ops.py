@@ -92,7 +92,7 @@ def main():
                     {'$set': {'notified': True}},
                 )
         if opts['repeat']:
-            time.sleep(60)
+            time.sleep(30)
         else:
             break
 
