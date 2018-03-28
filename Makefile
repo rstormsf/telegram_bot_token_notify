@@ -3,10 +3,10 @@
 build: venv deps init
 
 venv:
-	virtualenv --no-site-packages --python=python3 .env
+	virtualenv --no-site-packages --python=python3 venv
 	
 deps:
-	.env/bin/pip install -r project/requirements.txt
+	venv/bin/pip install -r requirements.txt
 
 clean:
 	find -name '*.pyc' -delete
