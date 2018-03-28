@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+
+[packages]
+pymongo = "*"
+pytz = "*"
+python-dateutil = "*"
+python-telegram-bot = "*"
+bottle = "*"
+gunicorn = "*"
+urllib3 = "*"
+certifi = "*"
+
+
+[requires]
+python_version = "3.5"
