@@ -82,7 +82,7 @@ def main():
                     'tx_id': op['transactionId'],
                 }
                 logging.debug(msg)
-                logging.debug('Notyfing channel #%d about operation #%s' % (
+                logging.debug('Notyfing channel #%s about operation #%s' % (
                     channel_id, op_item['_id'],
                 ))
                 tg_bot.send_message(channel_id, msg)
