@@ -7,6 +7,7 @@ Put name of server into var/inventory::
 
 - `git clone https://github.com/lorien/cluster-roles deploy/roles`
 - `./deploy_role.sh pyserver server-name`
+- `./deploy_role.sh mongodb server-name`
 
 Update local ~/.ssh/config (because pyserver role will change default SSH port)::
 
@@ -22,5 +23,4 @@ Prepare .env file at deploy/.env (it will be uploaded to the server)::
     TG_API_TOKEN_PRODUCTION=***
     TG_ADMIN_ID=***
 
-- `./deploy_role.sh mongodb server-name`
 - `ansible-playbook -i var/inventory deploy/gambit.yml --extra-vars="target=server-name"`
