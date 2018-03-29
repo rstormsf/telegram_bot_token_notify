@@ -9,3 +9,5 @@
 /.env
 /var/
 /deploy/roles/
+/deploy/.env
+/deploy/*.retry
