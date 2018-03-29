@@ -6,6 +6,7 @@ import logging
 from argparse import ArgumentParser
 import time
 
+import telegram.error
 from telegram import ParseMode
 
 from project.database import connect_db
@@ -44,14 +45,9 @@ def setup_logging():
 def process_cli():
     parser = ArgumentParser()
     parser.add_argument('--mode', default='production')
-    parser.add_argument(
-        '-r', '--repeat', action='store_true', default=False,
-        help='Activates every 1 minute, run untill process killed'
-    )
     opts = parser.parse_args()
     return {
         'mode': opts.mode,
-        'repeat': opts.repeat,
     }
 
 
@@ -72,55 +68,62 @@ def main():
     tg_bot = bot.init_bot()
     bot.check_settings()
 
-    while True:
-        block_id = 1 + load_recent_processed_block_id(db)
-        recp_address = bot.get_setting('wallet')
-        token_address = bot.get_setting('token')
-        channel_id = bot.get_setting('channel')
+    block_id = 1 + load_recent_processed_block_id(db)
+    recp_address = bot.get_setting('wallet')
+    token_address = bot.get_setting('token')
+    channel_id = bot.get_setting('channel')
 
-        for tx, op in find_op(recp_address, token_address, start_block=block_id):
-            op_item = prepare_op_item(tx, op)
-            old_item = db.op.find_one({'_id': op_item['_id']})
-            if old_item:
-                logging.debug('Found duplicate for operation %s' % op_item['_id'])
-            if not old_item or not old_item['_notified']:
-                db.op.save(op_item)
-                tx_id = re.sub(r'-0$', '', op['transactionId'])
+    for tx, op in find_op(recp_address, token_address, start_block=block_id):
+        op_item = prepare_op_item(tx, op)
+        old_item = db.op.find_one({'_id': op_item['_id']})
+        if old_item:
+            logging.debug('Found duplicate for operation %s' % op_item['_id'])
+        if not old_item or not old_item['_notified']:
+            db.op.save(op_item)
+            tx_id = re.sub(r'-0$', '', op['transactionId'])
+            try:
+                decimals = op['contract']['decimals']
+            except KeyError:
+                decimals = 18
+            try:
+                symbol = op['contract']['symbol']
+            except KeyError:
+                symbol = ''
+            value_norm = format_float(int(op['value']) / (10**decimals), 2)
+            msg = MSG_TEMPLATE % {
+                'to': op['to'],
+                'from': op['from'],
+                'value': value_norm,
+                'tx_id': tx_id,
+                'symbol': symbol,
+            }
+            logging.debug(msg)
+            logging.debug('Notyfing channel #%s about operation #%s' % (
+                channel_id, op_item['_id'],
+            ))
+            try_limit = 3
+            for try_count in range(try_limit):
                 try:
-                    decimals = op['contract']['decimals']
-                except KeyError:
-                    decimals = 18
-                try:
-                    symbol = op['contract']['symbol']
-                except KeyError:
-                    symbol = ''
-                value_norm = format_float(int(op['value']) / (10**decimals), 2)
-                msg = MSG_TEMPLATE % {
-                    'to': op['to'],
-                    'from': op['from'],
-                    'value': value_norm,
-                    'tx_id': tx_id,
-                    'symbol': symbol,
-                }
-                logging.debug(msg)
-                logging.debug('Notyfing channel #%s about operation #%s' % (
-                    channel_id, op_item['_id'],
-                ))
-                tg_bot.send_message(
-                    channel_id,
-                    msg,
-                    parse_mode=ParseMode.MARKDOWN,
-                    disable_web_page_preview=True
-                )
-                time.sleep(0.5)
-                db.op.find_one_and_update(
-                    {'_id': op_item['_id']},
-                    {'$set': {'notified': True}},
-                )
-        if opts['repeat']:
-            time.sleep(30)
-        else:
-            break
+                    tg_bot.send_message(
+                        channel_id,
+                        msg,
+                        parse_mode=ParseMode.MARKDOWN,
+                        disable_web_page_preview=True
+                    )
+                except telegram.error.TimedOut as ex:
+                    if try_count >= (try_limit - 1):
+                        raise
+                    else:
+                        logging.error('[ERROR] %s' % ex)
+                        logging.debug('Retrying to send tg message again...')
+                else:
+                    break
+
+            time.sleep(0.5)
+            db.op.find_one_and_update(
+                {'_id': op_item['_id']},
+                {'$set': {'notified': True}},
+            )
 
 
 if __name__ == '__main__':

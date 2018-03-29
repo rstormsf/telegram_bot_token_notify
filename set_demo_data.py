@@ -7,8 +7,8 @@ from gambit_bot import GambitBot
 def main():
     setup_logging()
     db = connect_db()
-    wallet_address = '0xe47494379c1d48ee73454c251a6395fdd4f9eb43' # some recepient
-    token_address = '0x12459c951127e0c374ff9105dda097662a027093' # some contract
+    wallet_address = '0x0039f22efb07a647557c7c5d17854cfd6d489ef3'
+    token_address = '0x6422b80dc6fcb795402f17ad347d8ad31e4ad0a6'
     channel_id = -1001263856479 # gambit-test 
 
     bot = GambitBot()
