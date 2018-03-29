@@ -8,3 +8,4 @@
 # Project specific
 /.env
 /var/
+/deploy/roles/

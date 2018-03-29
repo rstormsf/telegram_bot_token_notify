@@ -13,11 +13,3 @@ clean:
 init:
 	if [ ! -e var/run ]; then mkdir -p var/run; fi
 	if [ ! -e var/log ]; then mkdir -p var/log; fi
-
-stop:
-	heroku ps:scale bot=0
-	heroku ps:scale checker=0
-
-start:
-	heroku ps:scale bot=1
-	heroku ps:scale checker=1

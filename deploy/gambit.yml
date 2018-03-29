@@ -1,0 +1,29 @@
+---
+- hosts: "{{ target or 'null' }}"
+  tasks:
+  #- git: repo=https://github.com/rstormsf/telegram_bot_token_notify
+  #       dest=/web/gambit_bot
+  #       accept_hostkey=True
+  #  become_user: web
+  #  become: yes
+  - file: dest=/web/gambit_bot/var/run
+          state=directory
+          owner=web
+          group=web
+  - file: dest=/web/gambit_bot/var/log
+          state=directory
+          owner=web
+          group=web
+  - shell: pipenv sync
+    args:
+      chdir: /web/gambit_bot
+    become_user: web
+    become: yes
+  - file: dest=/etc/supervisord.conf.d/sv.gambit_bot.conf
+          src=/web/gambit_bot/conf/sv.gambit_bot.conf
+          state=link
+  - shell: supervisorctl update
+  - cron: 
+      name: process_ops
+      job: "cd /web/gambit_bot; /usr/local/bin/pipenv run python process_ops.py > var/log/process_ops.log 2>&1"
+      user: web

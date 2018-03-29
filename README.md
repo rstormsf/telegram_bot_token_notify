@@ -1,22 +1,24 @@
 ## Installation
 
-- Install heroku package on local computer
-- Go to project directory
-- `heroku create`
-- `git push heroku master`
-- `heroku ps:scale bot=1`
-- `heroku ps:scale checker=1`
-- `heroku config:set TG_API_TOKEN_PRODUCTION=SECRET-TELEGRAM-API-KEY`
-- `heroku config:set TRUSTWALLET_API_URL="https://api.trustwalletapp.com/transactions?address=%(wallet)s&page=%(page)d&startBlock=%(start_block)d"
-- `heroku config:set TG_ADMIN_ID=<TG-USER_ID>`
-- `heroku addons:create mongolab` # will create sandbox plan
-- Use bot UI to set up wallet, token and channel
+Put name of server into var/inventory::
 
-## Some notes
+    [some-group]
+    server-name
 
-I was able to activate new dyno for checker proces (on free plan) only via heroku web dashboard
+Create .env file::
 
-## MongoDB
+    MONGODB_URI=mongodb://localhost:27017/gambit_bot
+    TRUSTWALLET_API_URL=https://api.trustwalletapp.com/transactions?address=%(wallet)s&page=%(page)d&startBlock=%(start_block)d
+    TG_API_TOKEN_PRODUCTION=***
+    TG_ADMIN_ID=***
 
-By default free plan is used. To use paid plan run command `heroku addons:create mongolab:shared-cluster-1`
-If you need to keep existing data read https://devcenter.heroku.com/articles/mongolab#changing-plans
+- `git clone https://github.com/lorien/cluster-roles deploy/roles`
+- `./deploy_role.sh pyserver server-name`
+
+Update ~/.ssh/config with (because pyserver role will change default SSH port)::
+
+    Host server-name
+        Port 1477
+
+- `./deploy_role.sh mongodb server-name`
+- `ansible-playbook -i var/inventory deploy/gambit.yml --extra-vars="target=server-name"`
