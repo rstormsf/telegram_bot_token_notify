@@ -13,9 +13,8 @@ from project.database import connect_db
 from gambit.trustwallet import find_op
 from gambit_bot import GambitBot
 
-
 MSG_TEMPLATE = (
-    'New [token transfer](https://etherscan.io/tx/%(tx_id)s) to %(to)s from %(from)s, value=%(value)s %(symbol)s'
+    'New Gambit Telegram membershio and/or Tradingview indicators sold. [Value = %(value)s %(symbol)s](https://etherscan.io/tx/%(tx_id)s) from %(from)s'
 )
 
 

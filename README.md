@@ -5,7 +5,10 @@ Put name of server into var/inventory::
     [servers]
     server-name
 
+- `mkdir var`
+- `touch var/inventory`
 - `git clone https://github.com/lorien/cluster-roles deploy/roles`
+- `cp -R deploy/roles var/roles`
 - `./deploy_role.sh pyserver server-name`
 - `./deploy_role.sh mongodb server-name`
 

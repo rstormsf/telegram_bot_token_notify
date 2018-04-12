@@ -18,6 +18,7 @@
           src=.env
           owner=web
           group=web
+  - pip: name=pipenv
   - shell: pipenv sync
     args:
       chdir: /web/gambit_bot
@@ -31,3 +32,4 @@
       name: process_ops
       job: "cd /web/gambit_bot; /usr/local/bin/pipenv run python process_ops.py > var/log/process_ops.log 2>&1"
       user: web
+  - supervisorctl: name=gambit_bot state=restarted
